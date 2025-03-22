@@ -16,13 +16,16 @@
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
-    <title>Super Mario 64 on the Web!</title>
+    <title>Super Mario 64 en la Web!</title>
     <style>
       body,
       html {
         background-color: #000000;
         image-rendering: pixelated;
         scrollbar-width: none;
+        margin-bottom: 100px;
+        position: relative;
+        min-height: 100vh;
       }
       ::-webkit-scrollbar {
         display: none;
@@ -30,20 +33,32 @@
       canvas {
         width: 100vw;
         height: 100vh;
+        display: block;
+      }
+
+      #container {
+        position: relative;
+        z-index: 1;
       }
 
       .contenedor-control {
-        position: absolute; /* Cambiado a absolute */
-        bottom: 20px;
-        left: 20px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
         display: flex;
-        z-index: 10; /* Asegura que los controles estén por encima del canvas */
+        justify-content: center;
+        align-items: center;
+        padding-bottom: 20px;
+        z-index: 100;
+        gap: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
       }
 
       .boton {
         width: 60px;
         height: 60px;
-        background-color: #4CAF50;
+        background-color: #4caf50;
         color: white;
         text-align: center;
         line-height: 60px;
@@ -54,13 +69,15 @@
       }
 
       .c-stick {
-        width: 120px;
-        height: 120px;
-        background-color: #ccc;
-        border-radius: 50%;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
+        justify-content: center;
+        height: 100%;
+      }
+
+      .c-stick-row {
+        display: flex;
       }
 
       .palanca {
@@ -72,11 +89,7 @@
 
       .botones-accion {
         display: flex;
-        flex-direction: column;
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        z-index: 10;
+        gap: 10px;
       }
     </style>
   </head>
@@ -85,26 +98,26 @@
       <figure>
         <blockquote class="blockquote">
           <h1 class="display-6">
-            <strong>Keyboard Controls</strong>
+            <strong>Controles del Teclado</strong>
           </h1>
         </blockquote>
         <figcaption class="blockquote-footer">
-          You can use a controller!
+          ¡Puedes usar un mando!
         </figcaption>
         <figcaption class="blockquote-footer">
-          You can save! Save is stored in local storage.
+          ¡Puedes guardar! El guardado se almacena en el almacenamiento local.
         </figcaption>
         <figcaption class="blockquote-footer">
-          Press page down to hide these instructions.
+          Presiona la tecla Page Down para ocultar estas instrucciones.
         </figcaption>
         <figcaption class="blockquote-footer">
-          Press page up to see them again.
+          Presiona la tecla Page Up para verlas de nuevo.
         </figcaption>
       </figure>
       <table class="table table-sm text-light" id="keyboard">
         <thead>
-          <th scope="col">GameCube-Controller</th>
-          <th scope="col">Keyboard</th>
+          <th scope="col">Mando de GameCube</th>
+          <th scope="col">Teclado</th>
         </thead>
         <tbody>
           <tr>
@@ -139,13 +152,17 @@
     </div>
 
     <div class="contenedor-control">
-      <div class="boton" data-tecla="Enter">Inicio</div>
       <div class="c-stick">
-        <div class="boton" data-tecla="w">W</div>
-        <div class="boton" data-tecla="a">A</div>
-        <div class="boton" data-tecla="s">S</div>
-        <div class="boton" data-tecla="d">D</div>
+        <div class="c-stick-row">
+          <div class="boton" data-tecla="w">W</div>
+        </div>
+        <div class="c-stick-row">
+          <div class="boton" data-tecla="a">A</div>
+          <div class="boton" data-tecla="s">S</div>
+          <div class="boton" data-tecla="d">D</div>
+        </div>
       </div>
+      <div class="boton" data-tecla="Enter">Inicio</div>
       <div class="botones-accion">
         <div class="boton" data-tecla="x">X</div>
         <div class="boton" data-tecla="c">C</div>
@@ -171,7 +188,7 @@
         },
         canvas: (function () {
           var canvas = document.getElementById("canvas");
-          canvas.width = window.innerWidth; // Todo: how to do this from c++
+          canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
           canvas.addEventListener(
             "webglcontextlost",
@@ -187,20 +204,50 @@
       };
 
       const botones = document.querySelectorAll(".boton");
+      const canvasElement = document.getElementById("canvas");
+
+      const keyMap = {
+        "Enter": 13,
+        "w": 87,
+        "a": 65,
+        "s": 83,
+        "d": 68,
+        "x": 88,
+        "c": 67,
+        "q": 81,
+      };
+
+      function simulateKeyEvent(type, keyCode) {
+        const event = new KeyboardEvent(type, {
+          keyCode: keyCode,
+          which: keyCode,
+          key: String.fromCharCode(keyCode),
+          code: `Key${String.fromCharCode(keyCode).toUpperCase()}`,
+          bubbles: true,
+        });
+        // Dispatch the event to the canvas, where the game is listening for input
+        canvasElement.dispatchEvent(event);
+      }
 
       botones.forEach((boton) => {
         boton.addEventListener("touchstart", (e) => {
-          e.preventDefault(); // Evita el comportamiento predeterminado del toque
+          e.preventDefault();
           const tecla = boton.dataset.tecla;
-          console.log("Tecla presionada:", tecla);
-          // Aquí puedes agregar la lógica para enviar la señal de la tecla presionada a tu juego
+          const keyCode = keyMap[tecla];
+          if (keyCode) {
+            simulateKeyEvent("keydown", keyCode);
+            console.log("Tecla presionada:", tecla, keyCode);
+          }
         });
 
         boton.addEventListener("touchend", (e) => {
-          e.preventDefault(); // Evita el comportamiento predeterminado del toque
+          e.preventDefault();
           const tecla = boton.dataset.tecla;
-          console.log("Tecla liberada:", tecla);
-          // Aquí puedes agregar la lógica para enviar la señal de la tecla liberada a tu juego
+          const keyCode = keyMap[tecla];
+          if (keyCode) {
+            simulateKeyEvent("keyup", keyCode);
+            console.log("Tecla liberada:", tecla, keyCode);
+          }
         });
       });
     </script>
