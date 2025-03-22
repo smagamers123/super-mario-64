@@ -207,14 +207,14 @@
       const canvasElement = document.getElementById("canvas");
 
       const keyMap = {
-        "Enter": 13,
-        "w": 87,
-        "a": 65,
-        "s": 83,
-        "d": 68,
-        "x": 88,
-        "c": 67,
-        "q": 81,
+        "Enter": 13,  // Código de tecla para Enter
+        "w": 87,      // Código de tecla para W
+        "a": 65,      // Código de tecla para A
+        "s": 83,      // Código de tecla para S
+        "d": 68,      // Código de tecla para D
+        "x": 88,      // Código de tecla para X
+        "c": 67,      // Código de tecla para C
+        "q": 81,      // Código de tecla para Q
       };
 
       function simulateKeyEvent(type, keyCode) {
@@ -225,7 +225,7 @@
           code: `Key${String.fromCharCode(keyCode).toUpperCase()}`,
           bubbles: true,
         });
-        // Dispatch the event to the canvas, where the game is listening for input
+        // Envía el evento al canvas, donde el juego está escuchando la entrada
         canvasElement.dispatchEvent(event);
       }
 
